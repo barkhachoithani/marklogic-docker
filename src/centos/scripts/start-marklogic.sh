@@ -171,6 +171,17 @@ elif [[ "${MARKLOGIC_INIT}" == "true" ]]; then
         ML_WALLET_PASSWORD_PAYLOAD="wallet-password=${ML_WALLET_PASSWORD}"
     fi
 
+    if [[ -z "${GROUPS}" ]]; then
+        GROUPS_PAYLOAD="{}"
+    else
+        log "GROUPS is defined, creating groups."
+        GROUPS_PAYLOAD="{"group-name":"ENode"}"
+    fi
+
+    # for val in $StringVal; do
+    #     echo $val
+    # done
+
     log "Initialzing MarkLogic on ${HOSTNAME}."
 
     curl -s --anyauth -i -X POST \
@@ -183,6 +194,23 @@ elif [[ "${MARKLOGIC_INIT}" == "true" ]]; then
         --data "realm=${ML_REALM}" --data "${ML_WALLET_PASSWORD_PAYLOAD}" \
         "http://${HOSTNAME}:8001/admin/v1/instance-admin"
     sleep 5s
+    if [[ -z "${GROUPS}" ]]; then
+        GROUPS_PAYLOAD="{}"
+    else
+        log "GROUPS is defined, creating groups."
+        GROUPS_PAYLOAD="{"group-name":"ENode"}"
+        
+        curl -s --anyauth -i -X POST \
+            -H "Content-type:application/json" \
+            -d "${GROUPS_PAYLOAD}" \
+            "http://localhost:8002/manage/v2/groups"
+
+        curl -s --anyauth -i -X PUT \
+            -H "Content-type:application/json" \
+            -d "{"group-name":"DNode"}" \
+            "http://localhost:8002/manage/v2/groups/Default/properties"
+    fi
+
     sudo touch /opt/MarkLogic/DOCKER_INIT
 elif [[ -z "${MARKLOGIC_INIT}" ]] || [[ "${MARKLOGIC_INIT}" == "false" ]]; then
     log "MARKLOGIC_INIT is set to false or not defined, not initialzing."
