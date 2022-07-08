@@ -202,13 +202,13 @@ elif [[ "${MARKLOGIC_INIT}" == "true" ]]; then
 
         curl -s --anyauth -i -X POST \
             -H "Content-type:application/json" \
-            -u ${ML_ADMIN_USERNAME}:${ML_ADMIN_PASSWORD}
+            -u ${ML_ADMIN_USERNAME}:${ML_ADMIN_PASSWORD} \
             -d '${GROUPS_PAYLOAD}' \
             "http://${HOSTNAME}:8002/manage/v2/groups"
 
         curl -s --anyauth -i -X PUT \
             -H "Content-type:application/json" \
-            -u ${ML_ADMIN_USERNAME}:${ML_ADMIN_PASSWORD}
+            -u ${ML_ADMIN_USERNAME}:${ML_ADMIN_PASSWORD} \
             -d '{"group-name":"DNode"}' \
             "http://${HOSTNAME}:8002/manage/v2/groups/Default/properties"
     fi
