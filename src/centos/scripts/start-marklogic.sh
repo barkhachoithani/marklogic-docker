@@ -192,12 +192,11 @@ elif [[ "${MARKLOGIC_INIT}" == "true" ]]; then
     else
         log "GROUPS is defined, creating groups."
         GROUPS_PAYLOAD="{\"group-name\":\"ENode\"}"
-        LICENSE_PAYLOAD="{\"license-key\" : \"${LICENSE_KEY}\",\"licensee\" : \"${LICENSEE}\"}"
 
         curl -s --anyauth -i -X POST \
             -H "Content-type:application/json" \
             -u ${ML_ADMIN_USERNAME}:${ML_ADMIN_PASSWORD} \
-            -d '${GROUPS_PAYLOAD}' \
+            -d "@${GROUPS}" \
             "http://${HOSTNAME}:8002/manage/v2/groups"
 
         curl -s --anyauth -i -X PUT \
