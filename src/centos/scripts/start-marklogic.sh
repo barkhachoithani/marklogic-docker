@@ -171,13 +171,6 @@ elif [[ "${MARKLOGIC_INIT}" == "true" ]]; then
         ML_WALLET_PASSWORD_PAYLOAD="wallet-password=${ML_WALLET_PASSWORD}"
     fi
 
-    if [[ -z "${GROUPS}" ]]; then
-        GROUPS_PAYLOAD="{}"
-    else
-        log "GROUPS is defined, creating groups."
-        GROUPS_PAYLOAD="{"group-name":"ENode"}"
-    fi
-
     # for val in $StringVal; do
     #     echo $val
     # done
@@ -198,7 +191,8 @@ elif [[ "${MARKLOGIC_INIT}" == "true" ]]; then
         GROUPS_PAYLOAD="{}"
     else
         log "GROUPS is defined, creating groups."
-        GROUPS_PAYLOAD="{"group-name":"ENode"}"
+        GROUPS_PAYLOAD="{\"group-name\":\"ENode\"}"
+        LICENSE_PAYLOAD="{\"license-key\" : \"${LICENSE_KEY}\",\"licensee\" : \"${LICENSEE}\"}"
 
         curl -s --anyauth -i -X POST \
             -H "Content-type:application/json" \
