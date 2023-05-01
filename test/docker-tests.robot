@@ -162,7 +162,7 @@ Two node compose example with node joining enode group
   [Teardown]  Run keywords  
   ...  Delete compose from  ./compose-test-6.yaml
   ...  AND  Delete compose from  ./compose-test-7.yaml
-  
+
 Two node compose example with bootstrap node joining trying to itself
   Start compose from  ./compose-test-8.yaml
   Verify response for unauthenticated request with  7100  *Unauthorized*
@@ -181,7 +181,7 @@ Two node compose example with bootstrap node joining trying to itself
   Compose logs should contain  ./compose-test-8.yaml  *node2*TZ is defined, setting timezone to America/Los_Angeles.*
   Compose logs should contain  ./compose-test-8.yaml  *node2*MARKLOGIC_ADMIN_PASSWORD is set, using ENV for admin password.*
   Compose logs should contain  ./compose-test-8.yaml  *node2*MARKLOGIC_INIT is true, initializing the MarkLogic server.*
-  Compose logs should contain  ./compose-test-8.yaml  *node2*HOST cannot join itself, please check the value for MARKLOGIC_BOOTSTRAP_HOST.*
+  Compose logs should contain  ./compose-test-8.yaml  *node2*HOST cannot join itself, exiting.*
   Host count on port 7102 should be 1
   [Teardown]  Delete compose from  ./compose-test-8.yaml
   

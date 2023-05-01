@@ -291,8 +291,8 @@ elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
     fi
     BOOTSTRAP_HOST_ID=$(cat bootstraphost.json | jq '."host-default".id')
     LOCAL_HOST_ID=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -X GET http://localhost:8002/manage/v2/hosts/"${HOSTNAME}"?format=json | jq '."host-default".id')
-    if [[ "${BOOTSTRAP_HOST_ID}" == "${LOCAL_HOST_ID}" ]] && [[ "${HOST_FQDN}" == "${MARKLOGIC_BOOTSTRAP_HOST}" ]]; then
-        error "HOST cannot join itself, please check the value for MARKLOGIC_BOOTSTRAP_HOST." exit
+    if [[ "${BOOTSTRAP_HOST_ID}" == "${LOCAL_HOST_ID}" ]]; then
+        error "HOST cannot join itself, exiting." exit
     fi
     info "MARKLOGIC_JOIN_CLUSTER is true and join conditions are met, joining host to the cluster."
     
