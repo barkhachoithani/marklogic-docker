@@ -283,7 +283,17 @@ fi
 ################################################################
 if [[ -f /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is true, but skipping join because this instance has already joined a cluster."
-elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]] && [[ "${HOST_FQDN}" != "${MARKLOGIC_BOOTSTRAP_HOST}" ]]; then
+elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
+
+    HOST_RESP_CODE=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -o bootstraphost.json -w "%{http_code}" -X GET http://${MARKLOGIC_BOOTSTRAP_HOST}:8002/manage/v2/hosts/${MARKLOGIC_BOOTSTRAP_HOST}?format=json)
+    if [[ ${HOST_RESP_CODE} -ne 200 ]]; then
+        error "Bootstrap host $MARKLOGIC_BOOTSTRAP_HOST not found, exiting." exit
+    fi
+    BOOTSTRAP_HOST_ID=$(cat bootstraphost.json | jq '."host-default".id')
+    LOCAL_HOST_ID=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -X GET http://localhost:8002/manage/v2/hosts/"${HOSTNAME}"?format=json | jq '."host-default".id')
+    if [[ "${BOOTSTRAP_HOST_ID}" == "${LOCAL_HOST_ID}" ]] && [[ "${HOST_FQDN}" == "${MARKLOGIC_BOOTSTRAP_HOST}" ]]; then
+        error "HOST cannot join itself, please check the value for MARKLOGIC_BOOTSTRAP_HOST." exit
+    fi
     info "MARKLOGIC_JOIN_CLUSTER is true and join conditions are met, joining host to the cluster."
     
     if [[ -z "${MARKLOGIC_GROUP}" ]]; then
@@ -314,8 +324,9 @@ elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]] && [[ "${HOST_FQDN}" != "${MARK
 
     rm -f host.xml
     rm -f cluster.zip
+    rm -f bootstraphost.json
     sudo touch /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER
-elif [[ -z "${MARKLOGIC_JOIN_CLUSTER}" ]] || [[ "${MARKLOGIC_JOIN_CLUSTER}" == "false" ]] || [[ "${HOST_FQDN}" == "${MARKLOGIC_BOOTSTRAP_HOST}" ]]; then
+elif [[ -z "${MARKLOGIC_JOIN_CLUSTER}" ]] || [[ "${MARKLOGIC_JOIN_CLUSTER}" == "false" ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is false or not defined, not joining cluster."
 else
     error "MARKLOGIC_JOIN_CLUSTER must be true or false." exit
