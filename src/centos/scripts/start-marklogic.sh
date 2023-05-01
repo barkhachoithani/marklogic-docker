@@ -284,48 +284,48 @@ fi
 if [[ -f /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is true, but skipping join because this instance has already joined a cluster."
 elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
-
     HOST_RESP_CODE=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -o bootstraphost.json -w "%{http_code}" -X GET http://"${MARKLOGIC_BOOTSTRAP_HOST}":8002/manage/v2/hosts/"${MARKLOGIC_BOOTSTRAP_HOST}"?format=json)
-    if [[ ${HOST_RESP_CODE} -ne 200 ]]; then
+    if [[ ${HOST_RESP_CODE} -eq 200 ]]; then
+        # BOOTSTRAP_HOST_ID=$(cat bootstraphost.json | jq '."host-default".id')
+        BOOTSTRAP_HOST_ID=$(cmd < bootstraphost.json | jq '."host-default".id')
+        LOCAL_HOST_ID=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -X GET http://localhost:8002/manage/v2/hosts/"${HOSTNAME}"?format=json | jq '."host-default".id')
+        if [[ "${BOOTSTRAP_HOST_ID}" == "${LOCAL_HOST_ID}" ]]; then
+            info "HOST cannot join itself, skipped joining cluster."
+        else
+            info "MARKLOGIC_JOIN_CLUSTER is true and join conditions are met, joining host to the cluster."
+            if [[ -z "${MARKLOGIC_GROUP}" ]]; then
+                info "MARKLOGIC_GROUP is not specified, adding host to the Default group."
+                MARKLOGIC_GROUP_PAYLOAD=\"group=Default\"
+            else
+                GROUP_RESP_CODE=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -o /dev/null -w "%{http_code}" -X GET http://"${MARKLOGIC_BOOTSTRAP_HOST}":8002/manage/v2/groups/"${MARKLOGIC_GROUP}")
+                if [[ ${GROUP_RESP_CODE} -eq 200 ]]; then
+                    info "MARKLOGIC_GROUP is specified, adding host to the ${MARKLOGIC_GROUP} group."
+                    MARKLOGIC_GROUP_PAYLOAD=\"group=${MARKLOGIC_GROUP}\"
+                else
+                    error "MARKLOGIC_GROUP ${MARKLOGIC_GROUP} does not exist on the cluster" exit
+                fi
+            fi
+            curl_retry_validate "http://${HOSTNAME}:8001/admin/v1/server-config" 200 "--anyauth --user \"${ML_ADMIN_USERNAME}\":\"${ML_ADMIN_PASSWORD}\" \
+                -o host.xml -X GET -H \"Accept: application/xml\""
+
+            curl_retry_validate "http://${MARKLOGIC_BOOTSTRAP_HOST}:8001/admin/v1/cluster-config" 200 "--anyauth --user \"${ML_ADMIN_USERNAME}\":\"${ML_ADMIN_PASSWORD}\" \
+                -X POST -d \"${MARKLOGIC_GROUP_PAYLOAD}\" \
+                --data-urlencode \"server-config@./host.xml\" \
+                -H \"Content-type: application/x-www-form-urlencoded\" \
+                -o cluster.zip"
+
+            curl_retry_validate "http://${HOSTNAME}:8001/admin/v1/cluster-config" 202 "-o /dev/null --anyauth --user \"${ML_ADMIN_USERNAME}\":\"${ML_ADMIN_PASSWORD}\" \
+                -X POST -H \"Content-type: application/zip\" \
+                --data-binary @./cluster.zip"
+
+            rm -f host.xml
+            rm -f cluster.zip
+            rm -f bootstraphost.json
+            sudo touch /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER
+        fi
+    else
         error "Bootstrap host $MARKLOGIC_BOOTSTRAP_HOST not found, exiting." exit
     fi
-    BOOTSTRAP_HOST_ID=$(cat bootstraphost.json | jq '."host-default".id')
-    LOCAL_HOST_ID=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -X GET http://localhost:8002/manage/v2/hosts/"${HOSTNAME}"?format=json | jq '."host-default".id')
-    if [[ "${BOOTSTRAP_HOST_ID}" == "${LOCAL_HOST_ID}" ]]; then
-        error "HOST cannot join itself, exiting." exit
-    fi
-    info "MARKLOGIC_JOIN_CLUSTER is true and join conditions are met, joining host to the cluster."
-    
-    if [[ -z "${MARKLOGIC_GROUP}" ]]; then
-        info "MARKLOGIC_GROUP is not specified, adding host to the Default group."
-        MARKLOGIC_GROUP_PAYLOAD=\"group=Default\"
-    else
-        GROUP_RESP_CODE=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -o /dev/null -w "%{http_code}" -X GET http://"${MARKLOGIC_BOOTSTRAP_HOST}":8002/manage/v2/groups/"${MARKLOGIC_GROUP}")
-        if [[ ${GROUP_RESP_CODE} -eq 200 ]]; then
-            info "MARKLOGIC_GROUP is specified, adding host to the ${MARKLOGIC_GROUP} group."
-            MARKLOGIC_GROUP_PAYLOAD=\"group=${MARKLOGIC_GROUP}\"
-        else
-            error "MARKLOGIC_GROUP ${MARKLOGIC_GROUP} does not exist on the cluster" exit
-        fi
-    fi
-
-    curl_retry_validate "http://${HOSTNAME}:8001/admin/v1/server-config" 200 "--anyauth --user \"${ML_ADMIN_USERNAME}\":\"${ML_ADMIN_PASSWORD}\" \
-        -o host.xml -X GET -H \"Accept: application/xml\""
-
-    curl_retry_validate "http://${MARKLOGIC_BOOTSTRAP_HOST}:8001/admin/v1/cluster-config" 200 "--anyauth --user \"${ML_ADMIN_USERNAME}\":\"${ML_ADMIN_PASSWORD}\" \
-        -X POST -d \"${MARKLOGIC_GROUP_PAYLOAD}\" \
-        --data-urlencode \"server-config@./host.xml\" \
-        -H \"Content-type: application/x-www-form-urlencoded\" \
-        -o cluster.zip"
-
-    curl_retry_validate "http://${HOSTNAME}:8001/admin/v1/cluster-config" 202 "-o /dev/null --anyauth --user \"${ML_ADMIN_USERNAME}\":\"${ML_ADMIN_PASSWORD}\" \
-         -X POST -H \"Content-type: application/zip\" \
-        --data-binary @./cluster.zip"
-
-    rm -f host.xml
-    rm -f cluster.zip
-    rm -f bootstraphost.json
-    sudo touch /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER
 elif [[ -z "${MARKLOGIC_JOIN_CLUSTER}" ]] || [[ "${MARKLOGIC_JOIN_CLUSTER}" == "false" ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is false or not defined, not joining cluster."
 else
