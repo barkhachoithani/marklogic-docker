@@ -286,8 +286,7 @@ if [[ -f /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER ]]; then
 elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
     HOST_RESP_CODE=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -o bootstraphost.json -w "%{http_code}" -X GET http://"${MARKLOGIC_BOOTSTRAP_HOST}":8002/manage/v2/hosts/"${MARKLOGIC_BOOTSTRAP_HOST}"?format=json)
     if [[ ${HOST_RESP_CODE} -eq 200 ]]; then
-        # BOOTSTRAP_HOST_ID=$(cat bootstraphost.json | jq '."host-default".id')
-        BOOTSTRAP_HOST_ID=$(cmd < bootstraphost.json | jq '."host-default".id')
+        BOOTSTRAP_HOST_ID=$(cat bootstraphost.json | jq '."host-default".id')
         LOCAL_HOST_ID=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -X GET http://localhost:8002/manage/v2/hosts/"${HOSTNAME}"?format=json | jq '."host-default".id')
         if [[ "${BOOTSTRAP_HOST_ID}" == "${LOCAL_HOST_ID}" ]]; then
             info "HOST cannot join itself, skipped joining cluster."
