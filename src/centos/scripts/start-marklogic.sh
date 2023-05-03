@@ -284,7 +284,7 @@ fi
 if [[ -f /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is true, but skipping join because this instance has already joined a cluster."
 elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
-    HOST_RESP_CODE=$(curl --retry 5 --retry-all-errors --retry-max-time 60 http://"${MARKLOGIC_BOOTSTRAP_HOST}":8002/manage/v2/hosts/"${MARKLOGIC_BOOTSTRAP_HOST}"?format=json --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" \
+    HOST_RESP_CODE=$(curl --retry 6 --retry-max-time 60 http://"${MARKLOGIC_BOOTSTRAP_HOST}":8002/manage/v2/hosts/"${MARKLOGIC_BOOTSTRAP_HOST}"?format=json --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" \
                 -o bootstraphost.json -X GET -H "Accept: application/json")
     if [[ "${HOST_RESP_CODE}" -eq 200 ]]; then
         BOOTSTRAP_HOST_ID=$(grep -o '"id": "[^"]*' bootstraphost.json | grep -o '[^"]*$')
