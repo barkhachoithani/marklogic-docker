@@ -155,16 +155,26 @@ function restart_check {
 #   $3 :  Additional options to pass to curl
 ################################################################
 function curl_retry_validate {
-    for ((i = 0; i < N_RETRY; i = i + 1)); do
+    local return_response_code="${4:-false}"
+    while true; do
         request="curl -m 30 -s -w '%{http_code}' $3 $1"
         response_code=$(eval "${request}")
         if [[ ${response_code} -eq $2 ]]; then
-            return 0
+            break
+        else
+            retry_count=$((retry_count + 1))
+            if [[ $retry_count -ge $N_RETRY ]]; then
+                if [[ "${return_response_code}" = "true" ]]; then
+                    return ${response_code}
+                else
+                    error "Expected response code ${2}, got ${response_code} from ${1}." exit
+                fi
+            fi
+            sleep ${RETRY_INTERVAL}
         fi
-        sleep ${RETRY_INTERVAL}
     done
-
-    error "Expected response code ${2}, got ${response_code} from ${1}." exit
+    
+    return ${response_code}
 }
 
 ################################################################
@@ -284,8 +294,7 @@ fi
 if [[ -f /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is true, but skipping join because this instance has already joined a cluster."
 elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
-    HOST_RESP_CODE=$(curl --retry 6 --retry-max-time 60 http://"${MARKLOGIC_BOOTSTRAP_HOST}":8002/manage/v2/hosts/"${MARKLOGIC_BOOTSTRAP_HOST}"?format=json --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" \
-                -w "%{http_code}" -o bootstraphost.json -X GET -H "Accept: application/json")
+    HOST_RESP_CODE=$(curl_retry_validate "http://"${MARKLOGIC_BOOTSTRAP_HOST}":8002/manage/v2/hosts/"${MARKLOGIC_BOOTSTRAP_HOST}"?format=json" 200 "-o bootstraphost.json -X GET -H \"Accept: application/json\" --anyauth --user \"${ML_ADMIN_USERNAME}\":\"${ML_ADMIN_PASSWORD}\"" "true")
     if [[ "${HOST_RESP_CODE}" -eq 200 ]]; then
         BOOTSTRAP_HOST_ID=$(grep -o '"id": "[^"]*' bootstraphost.json | grep -o '[^"]*$')
         LOCAL_HOST_ID=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -X GET http://localhost:8002/manage/v2/hosts/"${HOSTNAME}"?format=json | jq '."host-default".id')
