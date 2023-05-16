@@ -337,7 +337,7 @@ elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
             sudo touch /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER
         fi
     else
-        error "Bootstrap host $MARKLOGIC_BOOTSTRAP_HOST not found, exiting." exit
+        info "Bootstrap host $MARKLOGIC_BOOTSTRAP_HOST not found, not joining cluster."
     fi
 elif [[ -z "${MARKLOGIC_JOIN_CLUSTER}" ]] || [[ "${MARKLOGIC_JOIN_CLUSTER}" == "false" ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is false or not defined, not joining cluster."
