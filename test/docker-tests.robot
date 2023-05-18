@@ -190,7 +190,6 @@ Two node compose example with incorrect bootstrap host name
   Verify response for unauthenticated request with  7100  *Unauthorized*
   Verify response for unauthenticated request with  7101  *Unauthorized*
   Verify response for unauthenticated request with  7102  *Unauthorized*
-  Verify response for unauthenticated request with  7200  *Unauthorized*
   Verify response for authenticated request with  7100  *Query Console*
   Verify response for authenticated request with  7101  *No license key has been entered*
   Verify response for authenticated request with  7102  *Monitoring Dashboard*

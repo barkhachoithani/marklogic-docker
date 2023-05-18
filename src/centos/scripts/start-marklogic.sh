@@ -300,8 +300,11 @@ elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
     curl_retry_validate "http://${MARKLOGIC_BOOTSTRAP_HOST}:8002/manage/v2/hosts?format=json" 200 "-o bootstraphost.json -X GET -H \"Accept: application/json\" --anyauth --user \"${ML_ADMIN_USERNAME}\":\"${ML_ADMIN_PASSWORD}\"" true
     HOST_RESP_CODE=$?
     if [[ "${HOST_RESP_CODE}" -eq 200 ]]; then
-        BOOTSTRAP_HOST_ID=$(jq '.["host-default-list"]["list-items"]["list-item"][] | select(.roleref == "bootstrap") | .idref' bootstraphost.json)
-        LOCAL_HOST_ID=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -m 30 -s -X GET http://localhost:8002/manage/v2/hosts/"${HOSTNAME}"?format=json | jq '."host-default".id')
+        BOOTSTRAP_HOST_ID=$(jq -r '.["host-default-list"]["list-items"]["list-item"][] | select(.roleref == "bootstrap") | .idref' bootstraphost.json)
+        LOCAL_HOST_CODE=$(curl --anyauth --user "${ML_ADMIN_USERNAME}":"${ML_ADMIN_PASSWORD}" -o localhost.json -w "%{http_code}" -m 30 -s -X GET http://localhost:8002/manage/v2/hosts/"${HOST_FQDN}"?format=json)
+        if [[ "${LOCAL_HOST_CODE}" -eq 200 ]]; then
+            LOCAL_HOST_ID=$(jq -r '."host-default".id' localhost.json)
+        fi
         if [[ "${BOOTSTRAP_HOST_ID}" == "${LOCAL_HOST_ID}" ]]; then
             info "HOST cannot join itself, skipped joining cluster."
         else
@@ -334,10 +337,11 @@ elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
             rm -f host.xml
             rm -f cluster.zip
             rm -f bootstraphost.json
+            rm -f localhost.json
             sudo touch /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER
         fi
     else
-        info "Bootstrap host $MARKLOGIC_BOOTSTRAP_HOST not found, not joining cluster."
+        error "Bootstrap host $MARKLOGIC_BOOTSTRAP_HOST not found, not joining cluster." exit
     fi
 elif [[ -z "${MARKLOGIC_JOIN_CLUSTER}" ]] || [[ "${MARKLOGIC_JOIN_CLUSTER}" == "false" ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is false or not defined, not joining cluster."
