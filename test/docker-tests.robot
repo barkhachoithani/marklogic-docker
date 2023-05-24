@@ -168,20 +168,13 @@ Two node compose example with bootstrap node joining trying to itself
   Verify response for unauthenticated request with  7100  *Unauthorized*
   Verify response for unauthenticated request with  7101  *Unauthorized*
   Verify response for unauthenticated request with  7102  *Unauthorized*
-  Verify response for unauthenticated request with  7200  *Unauthorized*
-  Verify response for unauthenticated request with  7201  *Unauthorized*
-  Verify response for unauthenticated request with  7202  *Unauthorized*
   Verify response for authenticated request with  7100  *Query Console*
   Verify response for authenticated request with  7101  *No license key has been entered*
   Verify response for authenticated request with  7102  *Monitoring Dashboard*
   Compose logs should contain  ./compose-test-8.yaml  *bootstrap*TZ is defined, setting timezone to America/Los_Angeles.*
   Compose logs should contain  ./compose-test-8.yaml  *bootstrap*MARKLOGIC_ADMIN_PASSWORD is set, using ENV for admin password.*
   Compose logs should contain  ./compose-test-8.yaml  *bootstrap*MARKLOGIC_INIT is true, initializing the MarkLogic server.*
-  Compose logs should contain  ./compose-test-8.yaml  *bootstrap*MARKLOGIC_JOIN_CLUSTER is false or not defined, not joining cluster.*
-  Compose logs should contain  ./compose-test-8.yaml  *node2*TZ is defined, setting timezone to America/Los_Angeles.*
-  Compose logs should contain  ./compose-test-8.yaml  *node2*MARKLOGIC_ADMIN_PASSWORD is set, using ENV for admin password.*
-  Compose logs should contain  ./compose-test-8.yaml  *node2*MARKLOGIC_INIT is true, initializing the MarkLogic server.*
-  Compose logs should contain  ./compose-test-8.yaml  *node2*HOST cannot join itself, skipped joining cluster.*
+  Compose logs should contain  ./compose-test-8.yaml  *bootstrap*HOST cannot join itself, skipped joining cluster.*
   Host count on port 7102 should be 1
   [Teardown]  Delete compose from  ./compose-test-8.yaml
   
