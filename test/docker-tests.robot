@@ -193,7 +193,7 @@ Two node compose example with incorrect bootstrap host name
   Compose logs should contain  ./compose-test-9.yaml  *node2*TZ is defined, setting timezone to America/Los_Angeles.*
   Compose logs should contain  ./compose-test-9.yaml  *node2*MARKLOGIC_ADMIN_PASSWORD is set, using ENV for admin password.*
   Compose logs should contain  ./compose-test-9.yaml  *node2*MARKLOGIC_INIT is true, initializing the MarkLogic server.*
-  Compose logs should contain  ./compose-test-9.yaml  *node2*Bootstrap host node1 not found, not joining cluster.*
+  Compose logs should contain  ./compose-test-9.yaml  *node2*Bootstrap host node1 not found, please verify the configuration. Node shutting down.*
   Host count on port 7102 should be 1
   [Teardown]  Delete compose from  ./compose-test-9.yaml
   
