@@ -242,11 +242,6 @@ else
 fi
 
 ################################################################
-# validate marklogic bootstrap
-################################################################
-CHECK_BOOTSTRAP=$(verify_host "${MARKLOGIC_BOOTSTRAP_HOST}")
-
-################################################################
 # check marklogic init (eg. MARKLOGIC_INIT is set)
 ################################################################
 if [[ -f /var/opt/MarkLogic/DOCKER_INIT ]]; then
@@ -291,7 +286,10 @@ elif [[ "${MARKLOGIC_INIT}" == "true" ]]; then
         sed 's%^.*<last-startup.*>\(.*\)</last-startup>.*$%\1%')
     restart_check "${HOSTNAME}" "${TIMESTAMP}"
 
-     # Only call /v1/instance-admin if host is bootstrap/standalone host
+    # verify host to install security database
+    CHECK_BOOTSTRAP=$(verify_host "${MARKLOGIC_BOOTSTRAP_HOST}")
+
+    # Only call /v1/instance-admin if host is bootstrap/standalone host
     if [[ "${CHECK_BOOTSTRAP}" == "true" ]] || [[ "${MARKLOGIC_JOIN_CLUSTER}" != "true" ]]; then
         info "Installing admin username and password, and initialize the security database and objects."
 
@@ -319,9 +317,13 @@ fi
 if [[ -f /var/opt/MarkLogic/DOCKER_JOIN_CLUSTER ]]; then
     info "MARKLOGIC_JOIN_CLUSTER is true, but skipping join because this instance has already joined a cluster."
 elif [[ "${MARKLOGIC_JOIN_CLUSTER}" == "true" ]]; then
+    # Verify bootsrap host for joining cluster
+    CHECK_BOOTSTRAP=$(verify_host "${MARKLOGIC_BOOTSTRAP_HOST}")
+    
     if [[ "${CHECK_BOOTSTRAP}" == "invalid" ]]; then
         error "Bootstrap host $MARKLOGIC_BOOTSTRAP_HOST not found, please verify the configuration. Node shutting down." exit
     else
+        # Check if bootstrap host is the localhost
         if [[ "${CHECK_BOOTSTRAP}" == "true" ]]; then
             info "HOST cannot join itself, skipped joining cluster."
         else
