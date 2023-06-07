@@ -166,6 +166,7 @@ function curl_retry_validate {
 
     error "Expected response code ${2}, got ${response_code} from ${1}." exit
 }
+info "join test completed"
 
 ################################################################
 # Start MarkLogic service
