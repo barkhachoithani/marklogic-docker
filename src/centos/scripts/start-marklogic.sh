@@ -336,17 +336,9 @@ fi
 ################################################################
 # check if node is available and mark it ready
 ################################################################
-
-# use latest health check only for version 11 and up
-if [[ "${MARKLOGIC_VERSION}" =~ "10" ]] || [[ "${MARKLOGIC_VERSION}" =~ "9" ]]; then
-    HEALTH_CHECK="7997"
-else 
-     HEALTH_CHECK="7997/LATEST/healthcheck"
-fi
-
 while true
 do
-    HOST_RESP_CODE=$(curl http://"${HOSTNAME}":"${HEALTH_CHECK}" -X GET -o host_health.xml -s -w "%{http_code}\n")
+    HOST_RESP_CODE=$(curl http://"${HOSTNAME}":7997 -X GET -o host_health.xml -s -w "%{http_code}\n")
     [[ -f host_health.xml ]] && error_message=$(< host_health.xml grep "SEC-DEFAULTUSERDNE")
     if [[ "${MARKLOGIC_INIT}" == "true" ]] && [ "${HOST_RESP_CODE}" -eq 200 ]; then
         sudo touch /var/opt/MarkLogic/ready
